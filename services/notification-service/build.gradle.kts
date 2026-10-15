@@ -9,6 +9,7 @@ plugins {
 
 dependencies {
     implementation(project(":common:events"))
+    implementation(project(":common:security"))   // фильтр JWT для всех HTTP-запросов
 
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-validation")

@@ -10,6 +10,8 @@ import kz.jazz.lms.user.repository.UserRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +27,7 @@ import java.util.UUID;
 @Service
 @Transactional
 public class UserService {
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     private final UserRepository repo;
     private final PasswordEncoder encoder;
@@ -76,6 +79,7 @@ public class UserService {
     }
 
     public UserDto create(CreateUserRequest req, EventType eventType) {
+        log.info("Creating user {} ({})", req.username(), req.userType());
         if (repo.existsByUsername(req.username())) throw new ConflictException("Username already taken: " + req.username());
         if (repo.existsByEmail(req.email())) throw new ConflictException("Email already registered: " + req.email());
 
@@ -108,6 +112,7 @@ public class UserService {
 
     @CacheEvict(value = "users", key = "#id")   // данные изменились — выкидываем из кэша
     public UserDto update(UUID id, UpdateUserRequest req) {
+        log.info("Updating user {}", id);
         User u = getEntity(id);
         if (req.firstName() != null) u.setFirstName(req.firstName());
         if (req.lastName() != null) u.setLastName(req.lastName());
@@ -130,6 +135,7 @@ public class UserService {
 
     @CacheEvict(value = "users", key = "#id")
     public void delete(UUID id) {
+        log.info("Deleting user {}", id);
         User u = getEntity(id);
         if (u.getUserType() == UserType.SUPER_ADMIN) throw new ConflictException("Cannot delete SuperAdmin");
         repo.delete(u);

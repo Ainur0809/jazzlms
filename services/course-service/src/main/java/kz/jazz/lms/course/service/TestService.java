@@ -8,6 +8,8 @@ import kz.jazz.lms.events.EventType;
 import kz.jazz.lms.events.Topics;
 import kz.jazz.lms.grpc.user.UserResponse;
 import kz.jazz.lms.course.client.UserClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +28,7 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class TestService {
+    private static final Logger log = LoggerFactory.getLogger(TestService.class);
     private static final Pattern GAP = Pattern.compile("\\[([^\\]]+)]");
     private static final Set<String> ADMIN_ROLES = Set.of("SUPER_ADMIN", "ADMIN");
 
@@ -85,6 +88,7 @@ public class TestService {
     }
 
     public Map<String, Object> createQuestion(UUID courseId, QuestionRequest req, UUID userId, String role) {
+        log.info("Creating {} question in course {}", req.type(), courseId);
         requireManage(course(courseId), userId, role);
         Question q = new Question();
         q.setCourseId(courseId);
@@ -94,6 +98,7 @@ public class TestService {
     }
 
     public Map<String, Object> updateQuestion(UUID id, QuestionRequest req, UUID userId, String role) {
+        log.info("Updating question {}", id);
         Question q = questionEntity(id);
         requireManage(course(q.getCourseId()), userId, role);
         if (req.type() != q.getType()) throw new BadRequestException("Question type cannot be changed");
@@ -103,6 +108,7 @@ public class TestService {
     }
 
     public void deleteQuestion(UUID id, UUID userId, String role) {
+        log.info("Deleting question {}", id);
         Question q = questionEntity(id);
         requireManage(course(q.getCourseId()), userId, role);
         questions.delete(q);   // из состава тестов удалится каскадом (FK ON DELETE CASCADE)
@@ -204,6 +210,7 @@ public class TestService {
 
     /** Add Test: создаём урок типа TEST и строку настроек. Урок неактивен, пока преподаватель не сохранит его (Save and view). */
     public Map<String, Object> createTest(UUID courseId, TestRequest req, UUID userId, String role) {
+        log.info("Creating test '{}' in course {}", req.name(), courseId);
         Course course = course(courseId);
         requireManage(course, userId, role);
         Unit u = new Unit();
@@ -224,6 +231,7 @@ public class TestService {
     }
 
     public Map<String, Object> updateTest(UUID unitId, TestRequest req, UUID userId, String role) {
+        log.info("Updating test {} ({} questions)", unitId, req.questions() == null ? "unchanged" : req.questions().size());
         Unit u = unitService.unit(unitId);
         if (u.getType() != Unit.Type.TEST) throw new BadRequestException("Unit is not a test");
         requireManage(course(u.getCourseId()), userId, role);
@@ -431,6 +439,7 @@ public class TestService {
 
     /** Отправка ответов: сравниваем с банком, считаем балл, при прохождении закрываем урок. */
     public Map<String, Object> submit(UUID unitId, UUID attemptId, Map<String, Object> answers, UUID userId, String role) {
+        log.info("Test {} submitted by user {}, attempt {}", unitId, userId, attemptId);
         TestAttempt a = attempts.findById(attemptId).orElseThrow(() -> new NotFoundException("Attempt not found"));
         if (!a.getTestId().equals(unitId) || !a.getUserId().equals(userId)) throw new ForbiddenException("Not your attempt");
         if (a.getSubmittedAt() != null) throw new ConflictException("Attempt already submitted");

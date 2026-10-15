@@ -47,6 +47,10 @@ grpc:
       address: static://${USER_SERVICE_GRPC_HOST:localhost}:${USER_SERVICE_GRPC_PORT:9091}
       negotiation-type: plaintext
 
+jwt:
+  secret: ${JWT_SECRET:jazzlms-super-secret-key-for-teaching-purposes-only-32b}
+  gateway-token: ${GATEWAY_TOKEN:jazzlms-gateway-internal-token}   # признак «запрос пришёл через gateway»
+
 management:
   endpoints:
     web:
@@ -60,5 +64,7 @@ management:
       endpoint: http://${ZIPKIN_HOST:localhost}:9411/api/v2/spans
 
 logging:
+  level:
+    kz.jazz.lms: DEBUG     # свой код пишем подробно: в Grafana видны DEBUG / INFO / WARN / ERROR
   pattern:
     level: "%5p [${spring.application.name},%X{traceId:-},%X{spanId:-}]"

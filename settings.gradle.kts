@@ -3,6 +3,7 @@ rootProject.name = "jazzlms"
 // Общие библиотеки (используются несколькими сервисами)
 include("common:proto")     // gRPC-контракты (.proto) -> Java-классы
 include("common:events")    // DTO событий Kafka
+include("common:security")  // проверка JWT внутри каждого сервиса
 
 // Микросервисы
 include("services:api-gateway")

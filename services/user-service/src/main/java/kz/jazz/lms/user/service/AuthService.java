@@ -9,6 +9,8 @@ import kz.jazz.lms.user.repository.UserRepository;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 @Transactional
 public class AuthService {
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final UserRepository repo;
     private final UserService userService;
@@ -94,6 +97,7 @@ public class AuthService {
     }
 
     public void changePassword(UUID userId, ChangePasswordRequest req) {
+        log.info("Password change for user {}", userId);
         User user = userService.getEntity(userId);
         if (!encoder.matches(req.currentPassword(), user.getPasswordHash()))
             throw new UnauthorizedException("Current password is wrong");
@@ -130,6 +134,7 @@ public class AuthService {
      * в токен пишется impersonatedBy, а в Kafka уходит событие для аудита (видно в Timeline).
      */
     public AuthResponse impersonate(UUID adminId, UUID targetId) {
+        log.info("Admin {} logs into account of {}", adminId, targetId);
         User admin = userService.getEntity(adminId);
         User target = userService.getEntity(targetId);
         if (admin.getUserType() != UserType.SUPER_ADMIN && admin.getUserType() != UserType.ADMIN)

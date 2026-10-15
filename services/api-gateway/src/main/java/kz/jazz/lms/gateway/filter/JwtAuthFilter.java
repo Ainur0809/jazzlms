@@ -42,9 +42,11 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
     private static final Set<String> STAFF_ROLES = Set.of("SUPER_ADMIN", "ADMIN", "TRAINER");
 
     private final SecretKey key;
+    private final String gatewayToken;
 
-    public JwtAuthFilter(@Value("${jwt.secret}") String secret) {
+    public JwtAuthFilter(@Value("${jwt.secret}") String secret, @Value("${jwt.gateway-token}") String gatewayToken) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.gatewayToken = gatewayToken;
     }
 
     @Override
@@ -83,6 +85,7 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
                     h.remove("X-User-Role");
                     h.add("X-User-Id", userId);
                     h.add("X-User-Role", role);
+                    h.set("X-Gateway-Token", gatewayToken);   // сервис поймёт, что роли уже проверены здесь
                 })
                 .build();
         return chain.filter(exchange.mutate().request(mutated).build());

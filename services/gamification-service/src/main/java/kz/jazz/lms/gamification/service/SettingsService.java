@@ -5,12 +5,15 @@ import kz.jazz.lms.gamification.repository.GamificationSettingsRepository;
 import kz.jazz.lms.gamification.repository.ProcessedEventRepository;
 import kz.jazz.lms.gamification.repository.ProfileRepository;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 public class SettingsService {
+    private static final Logger log = LoggerFactory.getLogger(SettingsService.class);
     private final GamificationSettingsRepository repo;
     private final ProfileRepository profiles;
     private final ProcessedEventRepository processed;
@@ -33,6 +36,7 @@ public class SettingsService {
     }
 
     public GamificationSettings update(GamificationSettings s) {
+        log.info("Updating gamification settings (enabled={})", s.isEnabled());
         GamificationSettings d = GamificationSettings.defaults();
         s.setId(GamificationSettings.ID);
         if (s.getPoints() == null) s.setPoints(d.getPoints());
@@ -51,6 +55,7 @@ public class SettingsService {
      * Журнал тоже стираем, иначе при повторной доставке события Kafka оно было бы пропущено как "уже учтённое".
      */
     public void resetStatistics() {
+        log.info("Resetting ALL gamification statistics");
         profiles.deleteAll();
         processed.deleteAll();
         redis.delete(List.of(GamificationService.LB_POINTS, GamificationService.LB_LEVELS, GamificationService.LB_BADGES));

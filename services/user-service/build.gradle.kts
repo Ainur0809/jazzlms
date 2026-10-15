@@ -10,6 +10,7 @@ plugins {
 dependencies {
     implementation(project(":common:proto"))
     implementation(project(":common:events"))
+    implementation(project(":common:security"))   // фильтр JWT для всех HTTP-запросов
 
     // REST API
     implementation("org.springframework.boot:spring-boot-starter-web")

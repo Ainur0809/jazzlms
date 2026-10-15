@@ -5,6 +5,8 @@ import kz.jazz.lms.user.dto.BranchRequest;
 import kz.jazz.lms.user.dto.GroupRequest;
 import kz.jazz.lms.user.dto.UserDto;
 import kz.jazz.lms.user.repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +16,7 @@ import java.util.*;
 @Service
 @Transactional
 public class OrgService {
+    private static final Logger log = LoggerFactory.getLogger(OrgService.class);
     private final BranchRepository branches;
     private final GroupRepository groups;
     private final UserBranchRepository userBranches;
@@ -38,6 +41,7 @@ public class OrgService {
     public Branch getBranch(UUID id) { return branches.findById(id).orElseThrow(() -> new NotFoundException("Branch not found: " + id)); }
 
     public Branch createBranch(BranchRequest req) {
+        log.info("Creating branch {}", req.name());
         if (branches.existsByNameIgnoreCase(req.name())) throw new ConflictException("Branch name already taken: " + req.name());
         return branches.save(apply(new Branch(), req));
     }
@@ -96,6 +100,7 @@ public class OrgService {
     public Group getGroup(UUID id) { return groups.findById(id).orElseThrow(() -> new NotFoundException("Group not found: " + id)); }
 
     public Group createGroup(GroupRequest req) {
+        log.info("Creating group {}", req.name());
         if (groups.existsByNameIgnoreCase(req.name())) throw new ConflictException("Group name already taken: " + req.name());
         Group g = new Group();
         return groups.save(applyGroup(g, req));
@@ -129,6 +134,7 @@ public class OrgService {
     }
 
     public void addUserToGroup(UUID groupId, UUID userId) {
+        log.info("Adding user {} to group {}", userId, groupId);
         getGroup(groupId);
         if (!users.existsById(userId)) throw new NotFoundException("User not found: " + userId);
         userGroups.save(new UserGroup(userId, groupId));

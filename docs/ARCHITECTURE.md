@@ -195,6 +195,14 @@ sequenceDiagram
   одним batch-вызовом gRPC `GetUsers`.
 - «Вход даёт очки раз в день» — в профиле хранится `lastLoginDay`; сравните с analytics, где логины считаются все.
 
+### common:security (фильтр JWT в каждом сервисе)
+
+`ServiceJwtFilter` — обычный servlet-фильтр, подключается автоконфигурацией Spring Boot
+(`META-INF/spring/...AutoConfiguration.imports`): сервису достаточно зависимости на модуль. Порядок проверки:
+публичные пути пропустить → токен обязателен и подпись верна → если запрос пришёл не через gateway
+(нет `X-Gateway-Token`), роль должна быть ADMIN или SUPER_ADMIN → `X-User-Id` / `X-User-Role` подменяются
+значениями из токена. Это «защита в глубину»: даже если gateway обошли, сервис не поверит чужим заголовкам.
+
 ### common
 - `common/proto` — единственный `.proto`; из него плагин генерирует и серверные, и клиентские классы.
 - `common/events` — `DomainEvent` (record) и `EventType`. Producer и consumer компилируются против одного
@@ -296,8 +304,8 @@ Gateway: `/api/settings`, `/api/gamification/settings`, `/api/gamification/reset
 
 ## 6. Известные упрощения (о чём сказать студентам)
 
-- Сервисы за gateway **доверяют** заголовку `X-User-Id`. В проде их порты не публикуют наружу
-  (здесь опубликованы для Swagger и отладки).
+- Порты сервисов опубликованы наружу для Swagger и отладки; в проде их закрывают. Сервисы проверяют JWT сами
+  (`common:security`), но секрет и `X-Gateway-Token` одни на всех и лежат в конфигурации.
 - JWT-секрет и пароли БД лежат в `application.yml`/`docker-compose.yml`. В проде — Vault / secrets.
 - Нет service discovery (Eureka/Consul): адреса сервисов заданы статически.
 - Нет retry/circuit breaker при вызове gRPC (Resilience4j) — хорошее упражнение.

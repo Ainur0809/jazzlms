@@ -15,6 +15,8 @@ import kz.jazz.lms.course.storage.FileStorage;
 import kz.jazz.lms.events.EventType;
 import kz.jazz.lms.events.Topics;
 import kz.jazz.lms.grpc.user.UserResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,6 +38,7 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class UnitService {
+    private static final Logger log = LoggerFactory.getLogger(UnitService.class);
     private static final Set<String> ADMIN_ROLES = Set.of("SUPER_ADMIN", "ADMIN");
     private static final Set<String> DOC_EXTENSIONS = Set.of("pdf", "ppt", "pptx", "doc", "docx", "odp", "xls", "xlsx");
 
@@ -155,6 +158,7 @@ public class UnitService {
     }
 
     public UnitDto update(UUID unitId, UnitRequest req, UUID userId, String role) {
+        log.info("Updating unit {} by {}", unitId, userId);
         Unit u = unit(unitId);
         requireManage(course(u.getCourseId()), userId, role);
         if (req.type() != u.getType()) throw new BadRequestException("Unit type cannot be changed");
@@ -164,6 +168,7 @@ public class UnitService {
     }
 
     public void delete(UUID unitId, UUID userId, String role) {
+        log.info("Deleting unit {} by {}", unitId, userId);
         Unit u = unit(unitId);
         requireManage(course(u.getCourseId()), userId, role);
         storage.delete(u.getFileKey());
@@ -233,6 +238,7 @@ public class UnitService {
      * Вызывается и для обычных уроков (кнопка Complete), и из TestService, когда тест сдан.
      */
     public void markCompleted(Unit u, Course course, UnitProgress p, UUID userId) {
+        log.info("Unit '{}' completed by user {}", u.getName(), userId);
         if (p.getCompletedAt() != null) return;
         p.setCompletedAt(Instant.now());
         progress.save(p);

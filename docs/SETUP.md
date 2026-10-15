@@ -95,7 +95,7 @@ curl http://localhost:8080/actuator/health
 
 | Что | Адрес | Логин |
 |---|---|---|
-| Swagger (REST API сервиса) | <http://localhost:8081/swagger-ui.html> (также 8082–8085) | — |
+| Swagger (REST API сервиса) | <http://localhost:8081/swagger-ui.html> (также 8082–8085) | кнопка Authorize → токен администратора из `POST /api/auth/login` |
 | Kafka UI — топики и события | <http://localhost:8090> | — |
 | Grafana — логи всех сервисов | <http://localhost:3001> | admin / admin |
 | Zipkin — путь запроса по сервисам | <http://localhost:9411> | — |

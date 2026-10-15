@@ -4,6 +4,8 @@ import kz.jazz.lms.user.domain.AccountSettings;
 import kz.jazz.lms.user.dto.SettingsDto;
 import kz.jazz.lms.user.repository.AccountSettingsRepository;
 import kz.jazz.lms.user.repository.GroupRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +18,7 @@ import java.time.Instant;
 @Service
 @Transactional
 public class SettingsService {
+    private static final Logger log = LoggerFactory.getLogger(SettingsService.class);
     private final AccountSettingsRepository repo;
     private final GroupRepository groups;
 
@@ -30,6 +33,7 @@ public class SettingsService {
     }
 
     public AccountSettings update(SettingsDto dto) {
+        log.info("Updating account settings: signup={}, lockAfterAttempts={}", dto.signupMode(), dto.lockAfterAttempts());
         AccountSettings s = get();
         if (dto.defaultGroupId() != null && !groups.existsById(dto.defaultGroupId()))
             throw new NotFoundException("Group not found: " + dto.defaultGroupId());

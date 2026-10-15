@@ -15,6 +15,8 @@ import kz.jazz.lms.course.storage.FileStorage;
 import kz.jazz.lms.events.EventType;
 import kz.jazz.lms.events.Topics;
 import kz.jazz.lms.grpc.user.UserResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,7 @@ import java.util.*;
 @Service
 @Transactional
 public class CourseService {
+    private static final Logger log = LoggerFactory.getLogger(CourseService.class);
 
     private final CourseRepository courses;
     private final CategoryRepository categories;
@@ -67,6 +70,7 @@ public class CourseService {
     }
 
     public CourseDto create(CourseRequest req, UUID createdBy) {
+        log.info("Creating course '{}' by {}", req.name(), createdBy);
         Course c = new Course();
         apply(c, req);
         if (c.getCertificateTemplateId() == null && !Boolean.TRUE.equals(req.noCertificate()))
@@ -89,6 +93,7 @@ public class CourseService {
     }
 
     public CourseDto update(UUID id, CourseRequest req, UUID userId) {
+        log.info("Updating course {} by {}", id, userId);
         Course c = getEntity(id);
         apply(c, req);
         Course saved = courses.save(c);
@@ -109,6 +114,7 @@ public class CourseService {
 
     /** Clone: копия курса со всеми уроками. Файлы в MinIO тоже копируются — иначе удаление одного курса сломало бы другой. */
     public CourseDto clone(UUID id, UUID userId) {
+        log.info("Cloning course {} by {}", id, userId);
         Course src = getEntity(id);
         Course copy = new Course();
         copy.setName(src.getName() + " (copy)");
@@ -142,6 +148,7 @@ public class CourseService {
 
     /** Мягкое удаление. Преподаватель может удалить только свой курс, админ — любой. */
     public void delete(UUID id, UUID userId, String role) {
+        log.info("Soft-deleting course {} by {}", id, userId);
         Course c = getEntity(id);
         boolean admin = "ADMIN".equals(role) || "SUPER_ADMIN".equals(role);
         if (!admin && (userId == null || !userId.equals(c.getCreatedBy())))
@@ -158,6 +165,7 @@ public class CourseService {
 
     /** Undo delete: просто снимаем пометку — уроки, записи и файлы никуда не девались. */
     public CourseDto restore(UUID id, UUID userId) {
+        log.info("Restoring course {}", id);
         Course c = courses.findById(id).filter(x -> x.getDeletedAt() != null)
                 .orElseThrow(() -> new NotFoundException("Deleted course not found: " + id));
         c.setDeletedAt(null);
@@ -168,6 +176,7 @@ public class CourseService {
 
     /** Необратимо: сначала файлы уроков из MinIO, потом строка курса (units и enrollments уйдут каскадом). */
     public void deletePermanently(UUID id) {
+        log.info("Permanently deleting course {} with its files", id);
         Course c = courses.findById(id).filter(x -> x.getDeletedAt() != null)
                 .orElseThrow(() -> new NotFoundException("Deleted course not found: " + id));
         units.findByCourseIdOrderByPositionAsc(id).forEach(u -> storage.delete(u.getFileKey()));
@@ -276,6 +285,7 @@ public class CourseService {
     }
 
     public EnrollmentDto updateProgress(UUID enrollmentId, int progress) {
+        log.info("Enrollment {} progress -> {}%", enrollmentId, progress);
         Enrollment e = enrollments.findById(enrollmentId)
                 .orElseThrow(() -> new NotFoundException("Enrollment not found: " + enrollmentId));
         e.setProgress(Math.max(0, Math.min(100, progress)));

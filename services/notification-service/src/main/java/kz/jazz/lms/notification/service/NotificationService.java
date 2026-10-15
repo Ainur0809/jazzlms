@@ -114,10 +114,12 @@ public class NotificationService {
     }
 
     public NotificationRule createRule(NotificationRuleRequest req) {
+        log.info("Creating notification rule '{}'", req.name());
         return rules.save(apply(new NotificationRule(), req));
     }
 
     public NotificationRule updateRule(String id, NotificationRuleRequest req) {
+        log.info("Updating notification rule {}", id);
         return rules.save(apply(getRule(id), req));
     }
 

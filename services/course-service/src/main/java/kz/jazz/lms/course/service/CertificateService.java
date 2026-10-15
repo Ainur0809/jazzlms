@@ -11,6 +11,8 @@ import kz.jazz.lms.course.repository.CourseRepository;
 import kz.jazz.lms.events.EventType;
 import kz.jazz.lms.events.Topics;
 import kz.jazz.lms.grpc.user.UserResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +29,7 @@ import java.util.*;
 @Service
 @Transactional
 public class CertificateService {
+    private static final Logger log = LoggerFactory.getLogger(CertificateService.class);
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.ENGLISH);
     private static final SecureRandom RND = new SecureRandom();
 
@@ -65,12 +68,14 @@ public class CertificateService {
     }
 
     public CertificateTemplate create(CertificateTemplateRequest req) {
+        log.info("Creating certificate template '{}'", req.name());
         CertificateTemplate t = new CertificateTemplate();
         apply(t, req);
         return templates.save(t);
     }
 
     public CertificateTemplate update(UUID id, CertificateTemplateRequest req) {
+        log.info("Updating certificate template {}", id);
         CertificateTemplate t = template(id);
         apply(t, req);
         return templates.save(t);
@@ -88,6 +93,7 @@ public class CertificateService {
     }
 
     public void delete(UUID id) {
+        log.info("Deleting certificate template {}", id);
         CertificateTemplate t = template(id);
         if (t.isDefault()) throw new ConflictException("The default template cannot be deleted");
         // FK с ON DELETE SET NULL: у курсов с этим шаблоном сертификат просто отключится
@@ -109,6 +115,7 @@ public class CertificateService {
 
     /** Вызывается из CourseService при 100% прогресса. Повторно не выдаётся (UNIQUE user_id + course_id). */
     public Optional<Certificate> issue(Course course, UUID userId, UserResponse u) {
+        log.info("Issuing certificate for course '{}' to user {}", course.getName(), userId);
         if (course.getCertificateTemplateId() == null) return Optional.empty();
         if (certificates.findByUserIdAndCourseId(userId, course.getId()).isPresent()) return Optional.empty();
         Certificate c = new Certificate();
