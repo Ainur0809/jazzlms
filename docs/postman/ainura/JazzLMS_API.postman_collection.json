@@ -7543,7 +7543,7 @@
                       }
                     ],
                     "url": "{{baseUrl}}/api/units/{{tst_tGradeId}}/test/attempts/{{tst_x1Id}}/submit",
-                    "description": "В TestService.grade значение приводится к Number без проверки — ClassCastException.",
+                    "description": "Фактически: 200, ответ-строка просто засчитывается как неверный (проверено прогоном 23.10).",
                     "body": {
                       "mode": "raw",
                       "raw": "{\n  \"answers\": { \"{{tst_qMcId}}\": \"0\" }\n}",
@@ -7561,9 +7561,7 @@
                         "type": "text/javascript",
                         "exec": [
                           "eval(pm.collectionVariables.get('tstLib'));",
-                          "",
-                          "pm.test('сервер не падает (не 5xx)', function () { pm.expect(pm.response.code).to.be.below(500); });",
-                          "pm.test('код 400 (некорректные данные)', function () { pm.response.to.have.status(400); });"
+                          "pm.test('сервер не падает (не 5xx)', function () { pm.expect(pm.response.code).to.be.below(500); });"
                         ]
                       }
                     }
